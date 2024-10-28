@@ -120,6 +120,12 @@ och skapa "onödiga" commits. Men om vi jobbar med remote repos finns risk
 för liknande konflikter som med merge om vi inte kommunicerar med våra
 kollegor och jobbar på samma delar av projektet. 
 
+Rebase ger oss också en väldigt stor kontroll över commit-historiken
+där vi kan i princip redigera historiken exakt hur vi vill. Vi kan ta bort
+commits, ändra beskrivningen, slå ihop flera commits och annat. Detta kan 
+vara väldigt användbart i syfte att göra historiken tydligare och slänga bort
+commits som bara gör historiken svårläst eller svårförstådd.
+
 Det finns också så klart en del problem med rebase. Det kan vara väldigt
 svårt att ångra en rebase och det kan göra det svårare att reverta i historiken.
 Man få ha detta i åtanke när man jobbar med rebase.
