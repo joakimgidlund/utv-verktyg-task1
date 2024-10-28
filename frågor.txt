@@ -1,0 +1,172 @@
+Jag siktar på VG!
+
+-Vad är pull respektive push?
+pull används för att ladda ner innehåll från ett remote repository. 
+Detta är användbart för att uppdatera sitt lokala repository till samma
+läge som remote repo. Viktigt att uppdatera sitt lokala repo ofta 
+för att undvika konflikter i sina ändringar.
+
+Push används för att ladda upp dina lokala ändringar till ett remote repo. För att
+undvika konflikter är det ofta bra att först köra git pull för att säkerställa
+att ens lokala repo är uppdaterad med remote repo.
+
+-------------------------------
+
+-När använder man log respektive status?
+git log skriver ut en historik av commits på repon. Bra att använda för att 
+hålla en uppdaterad blick över projektet och hålla koll på vilka branches man
+commitar till.
+
+Status används för att göra det tydligt vad man ändrar just nu i sin repo.
+Med git status får man nuvarande ändringar utskrivna, t.ex. filer som har fått
+ändringar sen senaste commit, eller filer som tagits bort.
+
+-------------------------------
+
+-Vad är en git branch och varför är de viktiga?
+En branch gör det lättare att jobba på ändringar utan att vara 
+orolig för att skapa svårlösta problem på ens projekt. Branches är nyttiga
+t.ex. när man ska arbeta på en ny feature och vill vara kunna experimentera
+med sin kod. När ändringarna är kompletta kan man sedan lätt införa
+dem i huvudbranchen och eventuella konflikter blir tydliga och relativt
+lättlösta.
+
+--------------------------------
+
+-Det finns flera sätt att rulla tillbaka koden till ett tidigare tillstånd...
+Vi börjar med git restore, som väldigt simpelt kan återställa en fil till
+ett tillstånd i en tidigare commit. Säg att vi har gjort en ändringar i en
+fil och det ligger nu i väntan på att läggas till och commitas, då kan vi köra
+git restore "fil" för att återställa filen till hur den var på HEAD. Git 
+ger ingen särskild utskrift när detta fungerar som det ska.
+
+Git reset är en funktion som flyttar HEAD till en tidigare commit och ändrar därför
+historiken över commits. Med flaggor kan man påverka hur reset fungerar med nuvarande 
+ändringar, dessa flaggor är --soft, --mixed(default) och --hard. Soft bevarar
+ändringarna i staging area och working directory, mixed tar bort ändringar från
+staging area och hard tar bort alla ändringar permanent. Därför väldigt viktigt att
+vara helt säker på vad man gör när man använder hard. Eftersom reset kan ändra 
+historiken ska man också vara försiktig då det kan göra det svårt att följa 
+ändringar i loggen. Kan också användas för att sopa undan misstag...
+
+Git log --oneline innan en hard reset på feature-test branchen:
+074400a (HEAD -> feature-test, origin/main, main) added run_game script
+
+Efter kommandot:
+$ git reset --hard HEAD~1
+HEAD is now at 8628c56 added user input logic to getReply()
+
+$ git log --oneline
+8628c56 (HEAD -> feature-test) added user input logic to getReply()
+Den commiten som var senast har nu helt försvunnit från feature-test branchen.
+
+Git revert låter oss ångra en särskild commit och skapa en ny commit med en
+tydlig kommentar att en revert har gjorts. Helt enkelt så inverterar revert en tidigare
+commit. 
+Exempel på kommandot:
+$ git revert HEAD~1
+[feature-test 2435e53] Revert "added user input logic to getReply()"
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+ -------------------------------
+
+-git rebase och git merge
+När flera jobbar på samma projekt, både i main-branch och i diverse andra branches
+kan det lätt uppstå konflikter. Därför alltid viktigt att göra en pull innan push 
+för att säkerställa att ens lokala repo är uppdaterad. Då vi gärna jobbar i branches
+när vi vill göra ändringar eller lägga till funktioner till våra projekt blir merge
+ett ovärderligt verktyg. Genom att jobba med branches och merge hjälper git oss genom
+att inte låta ändringar med konflikter bara hända, utan tvingar oss att faktiskt titta
+på konflikten och lösa den. Det blir också tydligt i historiken hur vi har arbetat
+och det är tydligt hur vi kan gå tillbaka till en commit innan merge för att återställa
+våra ändringar ifall vi behöver.
+
+Något som kan bli problematiskt med merge är när vi baserar våra ändringar på en gammal
+commit i main och sedan ska göra en merge. Det är då väldigt möjligt att det dyker upp
+konflikter som kanske är lite krångligare än vanligt. Historiken kan då också bli 
+svårtydd och gör det svårare att gå tillbaka i projektet vid senare tillfälle för
+en tydlig överblick.
+
+Exempel på merge conflict som uppstått när en fil ändrats på samma rad: 
+$ git merge feature-b
+Auto-merging file.txt
+CONFLICT (content): Merge conflict in file.txt
+Automatic merge failed; fix conflicts and then commit the result.
+
+$ cat file.txt
+Hej, jag heter Joakim.
+<<<<<<< HEAD
+Gidlund är mitt efternamn.
+=======
+Per Erik är mitt mellannamn.
+>>>>>>> feature-b
+
+Vi löser denna konflikt genom att välja vilken version av raden vi vill spara.
+Lätt löst genom att redigera textfilen och bara ta bort det vi inte vill ha.
+
+$ git log --oneline
+2bfb1e2 (HEAD -> main) merge feature-b
+d00c915 (feature-b) modified file.txt
+2f02f25 (feature-a) added surname
+b08dccc added file.txt to main
+
+-----
+
+Git rebase ger oss möjligheten att basera en branch på en senare commit än
+den vi har branchat från. Det ändrar historiken och kan göra det svårare att
+följa den i efterhand. Men det gör det lättare att hålla
+din gren uppdaterad med basgrenen utan att behöva hålla på med merging
+och skapa "onödiga" commits. Men om vi jobbar med remote repos finns risk
+för liknande konflikter som med merge om vi inte kommunicerar med våra
+kollegor och jobbar på samma delar av projektet. 
+
+Det finns också så klart en del problem med rebase. Det kan vara väldigt
+svårt att ångra en rebase och det kan göra det svårare att reverta i historiken.
+Man få ha detta i åtanke när man jobbar med rebase.
+
+En konflikt under rebase hanteras nästan exakt likadant som vid en
+merge konflikt. Vi måste öppna filen och bestämma vilken version vi vill
+behålla och sedan fortsätta rebase med git add "fil" och sedan rebase --continue.
+
+$ git rebase main
+Successfully rebased and updated refs/heads/feature-b.
+
+Utan problem vid en rebase.
+
+Däremot om vi försöker göra en rebase och får en konflikt:
+$ git rebase main
+Auto-merging file.txt
+CONFLICT (content): Merge conflict in file.txt
+error: could not apply ca4b50a... fourth row on feature-b
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+hint: Disable this message with "git config advice.mergeConflict false"
+Could not apply ca4b50a... fourth row on feature-b
+
+Vi kan då välja några alternativ. Vi kan manuellt fixa konflikten som med merge,
+vi kan göra en abort och avbryta rebase. Jag väljer att lösa konflikten.
+
+$ git add file.txt
+$ git rebase --continue
+[detached HEAD 29be33a] fourth row on feature-b
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+Successfully rebased and updated refs/heads/feature-b.
+
+Hur ser vår historik ut?
+I main, innan rebase:
+f559fe0 (HEAD -> main) added fourth line
+4b1aed2 (feature-b) added third line to file
+
+I feature-b:
+Efter tillägg till file.txt, rebase och konflikten hanterad:
+29be33a (HEAD -> feature-b) fourth row on feature-b
+f559fe0 (main) added fourth line
+
+Jag kan nu fortsätta jobba i feature-b med en uppdaterad bas.
+Men utan en merge i main så ligger mina ändringar bara i feature-b,
+så om jag vill ha mina ändringar i main måste jag sedan göra en merge.
+Men med rebase kan man vara förberedd för ändringar som skett i basgrenen
+och slippa lösa konflikterna där och kan göra det i lugn och ro i grenen
+man jobbar i vilket kan rädda en från huvudvärk.
